@@ -2,6 +2,7 @@ import Manhattan
 import Euclidean
 import Hamming
 import time
+import heapq
 
 def initialize_state(instance):
     initial_state = [instance[i:i + 3] for i in range(0, 9, 3)]
@@ -150,6 +151,104 @@ def depth_limited_Greedy(matrix, last_move, depth, euristic, move_count=0):
     return None
 
 
+###################################################################################################################
+
+# Euristică: Distanța Manhattan
+def h(state):
+    return Manhattan.manhattan(state)
+
+# Determină dacă o configurație este starea obiectiv
+def is_final(state):
+    return (state)
+
+# Generează succesorii unei configurații
+def neighbors(state):
+    return get_successors(state)
+
+def get_successors(configuration):
+    successors = []
+    i, j = None, None
+
+    # 1. Găsirea spațiului gol (0)
+    for row in range(3):
+        for col in range(3):
+            if configuration[row][col] == 0:
+                i, j = row, col
+                break
+
+    # 2. Încercarea tuturor mișcărilor posibile
+
+    # Mișcare sus
+    if i > 0:
+        new_config = [row[:] for row in configuration]  # Creează o copie a configurației
+        new_config[i][j], new_config[i-1][j] = new_config[i-1][j], new_config[i][j]
+        successors.append(new_config)
+
+    # Mișcare jos
+    if i < 2:
+        new_config = [row[:] for row in configuration]
+        new_config[i][j], new_config[i+1][j] = new_config[i+1][j], new_config[i][j]
+        successors.append(new_config)
+
+    # Mișcare stânga
+    if j > 0:
+        new_config = [row[:] for row in configuration]
+        new_config[i][j], new_config[i][j-1] = new_config[i][j-1], new_config[i][j]
+        successors.append(new_config)
+
+    # Mișcare dreapta
+    if j < 2:
+        new_config = [row[:] for row in configuration]
+        new_config[i][j], new_config[i][j+1] = new_config[i][j+1], new_config[i][j]
+        successors.append(new_config)
+
+    return successors
+
+# Distanța dintre două stări consecutive. În cazul nostru, este întotdeauna 1 pentru puzzle-ul de alunecare.
+def dist(neighbor, state):
+    return 1  # Deoarece fiecare mutare este la o distanță de 1 în puzzle-ul de alunecare.
+
+# Verifică validitatea unei stări (poți să adaugi orice regulă suplimentară aici)
+def is_valid(neighbor):
+    return True  # În acest exemplu, orice succesor generat este valid.
+
+# Reconstructează calea de la stare la stare inițială
+def reconstruct_path(state, came_from):
+    path = []
+    while state in came_from:
+        path.append(state)
+        state = came_from[state]
+    path.reverse()
+    return path
+
+# Implementarea algoritmului A*
+def A_star(init_state):
+    came_from = {}
+    d = {}
+    d[init_state] = 0
+    f = {}
+    f[init_state] = h(init_state)
+
+    # Utilizez o listă pentru a simula PriorityQueue.
+    pq = [(f[init_state], init_state)]
+
+    while pq:
+        _, state = heapq.heappop(pq)  # Extrag starea cu cea mai mică valoare f.
+
+        if is_final(state):
+            return reconstruct_path(state, came_from)
+
+        for neighbor in neighbors(state):
+            if is_valid(neighbor) and (neighbor not in d or d[neighbor] > d[state] + dist(neighbor, state)):
+                d[neighbor] = d[state] + dist(neighbor, state)
+                f[neighbor] = d[neighbor] + h(neighbor)
+                came_from[neighbor] = state
+                heapq.heappush(pq, (f[neighbor], neighbor))
+
+    return None
+#####################################################################################################################
+
+
 
 instances = [
     #[8, 6, 7, 2, 5, 4, 0, 3, 1],
@@ -157,7 +256,11 @@ instances = [
     #[2, 7, 5, 0, 8, 4, 3, 1, 6]
 ]
 
+solution = A_star(tuple(map(tuple, instances)))  # Convertesc lista de liste în tuple de tuple pentru a putea fi folosită ca cheie în dicționare.
+print(solution)
 
+
+'''
 for instance in instances:
     print("\nFor instance:", instance)
 
@@ -175,7 +278,7 @@ for instance in instances:
         else:
             print("No solution found within the maximum depth.")
         print("Elapsed time:", end_time - start_time, "seconds")
-
+'''
 
 
 
