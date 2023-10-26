@@ -151,134 +151,75 @@ def depth_limited_Greedy(matrix, last_move, depth, euristic, move_count=0):
     return None
 
 
-###################################################################################################################
+def a_star_search(matrix, last_move, heuristic, max_depth, move_count=0):
+    if move_count > max_depth:
+        return None
 
-# Euristică: Distanța Manhattan
-def h(state):
-    return Manhattan.manhattan(state)
+    if is_final_state(matrix):
+        return matrix, move_count
 
-# Determină dacă o configurație este starea obiectiv
-def is_final(state):
-    return (state)
+    priority_queue = [(heuristic(matrix) + move_count, matrix, last_move)]
 
-# Generează succesorii unei configurații
-def neighbors(state):
-    return get_successors(state)
+    while priority_queue:
+        _, current_matrix, last_move = heapq.heappop(priority_queue)
 
-def get_successors(configuration):
-    successors = []
-    i, j = None, None
+        for direction in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
+            new_matrix, new_last_move = transition([row.copy() for row in current_matrix], last_move, direction)
 
-    # 1. Găsirea spațiului gol (0)
-    for row in range(3):
-        for col in range(3):
-            if configuration[row][col] == 0:
-                i, j = row, col
-                break
+            if is_final_state(new_matrix):
+                return new_matrix, move_count + 1
 
-    # 2. Încercarea tuturor mișcărilor posibile
-
-    # Mișcare sus
-    if i > 0:
-        new_config = [row[:] for row in configuration]  # Creează o copie a configurației
-        new_config[i][j], new_config[i-1][j] = new_config[i-1][j], new_config[i][j]
-        successors.append(new_config)
-
-    # Mișcare jos
-    if i < 2:
-        new_config = [row[:] for row in configuration]
-        new_config[i][j], new_config[i+1][j] = new_config[i+1][j], new_config[i][j]
-        successors.append(new_config)
-
-    # Mișcare stânga
-    if j > 0:
-        new_config = [row[:] for row in configuration]
-        new_config[i][j], new_config[i][j-1] = new_config[i][j-1], new_config[i][j]
-        successors.append(new_config)
-
-    # Mișcare dreapta
-    if j < 2:
-        new_config = [row[:] for row in configuration]
-        new_config[i][j], new_config[i][j+1] = new_config[i][j+1], new_config[i][j]
-        successors.append(new_config)
-
-    return successors
-
-# Distanța dintre două stări consecutive. În cazul nostru, este întotdeauna 1 pentru puzzle-ul de alunecare.
-def dist(neighbor, state):
-    return 1  # Deoarece fiecare mutare este la o distanță de 1 în puzzle-ul de alunecare.
-
-# Verifică validitatea unei stări (poți să adaugi orice regulă suplimentară aici)
-def is_valid(neighbor):
-    return True  # În acest exemplu, orice succesor generat este valid.
-
-# Reconstructează calea de la stare la stare inițială
-def reconstruct_path(state, came_from):
-    path = []
-    while state in came_from:
-        path.append(state)
-        state = came_from[state]
-    path.reverse()
-    return path
-
-# Implementarea algoritmului A*
-def A_star(init_state):
-    came_from = {}
-    d = {}
-    d[init_state] = 0
-    f = {}
-    f[init_state] = h(init_state)
-
-    # Utilizez o listă pentru a simula PriorityQueue.
-    pq = [(f[init_state], init_state)]
-
-    while pq:
-        _, state = heapq.heappop(pq)  # Extrag starea cu cea mai mică valoare f.
-
-        if is_final(state):
-            return reconstruct_path(state, came_from)
-
-        for neighbor in neighbors(state):
-            if is_valid(neighbor) and (neighbor not in d or d[neighbor] > d[state] + dist(neighbor, state)):
-                d[neighbor] = d[state] + dist(neighbor, state)
-                f[neighbor] = d[neighbor] + h(neighbor)
-                came_from[neighbor] = state
-                heapq.heappush(pq, (f[neighbor], neighbor))
+            if move_count + 1 <= max_depth:
+                heapq.heappush(priority_queue, (heuristic(new_matrix) + move_count + 1, new_matrix, new_last_move))
 
     return None
-#####################################################################################################################
 
+
+def Solve_A(init_state, last_move, max_depth, heuristic):
+    return a_star_search(init_state, last_move, heuristic, max_depth)
 
 
 instances = [
-    #[8, 6, 7, 2, 5, 4, 0, 3, 1],
-    [2, 5, 3, 1, 0, 6, 4, 7, 8]
-    #[2, 7, 5, 0, 8, 4, 3, 1, 6]
+    #[8, 6, 7, 2, 5, 4, 0, 3, 1]
+    #[2, 5, 3, 1, 0, 6, 4, 7, 8]
+    [2, 7, 5, 0, 8, 4, 3, 1, 6]
 ]
 
-solution = A_star(tuple(map(tuple, instances)))  # Convertesc lista de liste în tuple de tuple pentru a putea fi folosită ca cheie în dicționare.
-print(solution)
 
-
-'''
 for instance in instances:
     print("\nFor instance:", instance)
 
     initial_matrix, _ = initialize_state(instance)
     strategies = ["IDDFS", Manhattan.manhattan, Euclidean.euclid, Hamming.hamming]
+    strategies2 = [Manhattan.manhattan, Euclidean.euclid, Hamming.hamming]
 
+'''For IDDFS + GREEDY CU EURISTICI
     for strategy in strategies:
         start_time = time.time()
         solution = Solve(initial_matrix, "NONE", 30, strategy)
         end_time = time.time()
         if solution:
-            print("Solution found for", strategy, " : ")
+            print("Solution found for", strategy.__name__, " : ")
             for row in solution:
                 print(row)
         else:
             print("No solution found within the maximum depth.")
         print("Elapsed time:", end_time - start_time, "seconds")
 '''
+
+'''FOR A* cu euristici'''
+for strategy in strategies2:
+        start_time = time.time()
+        solution, move_count = Solve(initial_matrix, "NONE", 30, strategy)
+        end_time = time.time()
+        if solution:
+            print("Solution found for", strategy.__name__, " : ")
+            for row in solution:
+                print(row)
+        else:
+            print("No solution found within the maximum depth.")
+        print("Elapsed time:", end_time - start_time, "seconds")
+
 
 
 
