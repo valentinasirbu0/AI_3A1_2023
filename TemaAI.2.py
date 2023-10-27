@@ -159,20 +159,33 @@ def a_star_search(matrix, last_move, heuristic, max_depth, move_count=0):
         return matrix, move_count
 
     priority_queue = [(heuristic(matrix) + move_count, matrix, last_move)]
+    visited = set()
 
     while priority_queue:
         _, current_matrix, last_move = heapq.heappop(priority_queue)
+        visited.add(tuple(map(tuple, current_matrix)))
+
+        print("Intermediate state at move_count", move_count)
+        for row in current_matrix:
+            print(row)
+        print("--------")
 
         for direction in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
             new_matrix, new_last_move = transition([row.copy() for row in current_matrix], last_move, direction)
+        new_matrix_key = tuple(map(tuple, new_matrix))
 
+        if new_matrix_key not in visited:
             if is_final_state(new_matrix):
                 return new_matrix, move_count + 1
 
-            if move_count + 1 <= max_depth:
-                heapq.heappush(priority_queue, (heuristic(new_matrix) + move_count + 1, new_matrix, new_last_move))
+        if move_count + 1 <= max_depth:
+            heapq.heappush(priority_queue, (heuristic(new_matrix) + move_count + 1, new_matrix, new_last_move))
+            # Increment move_count when making a move
+            move_count += 1
+
 
     return None
+
 
 
 def Solve_A(init_state, last_move, max_depth, heuristic):
@@ -181,8 +194,8 @@ def Solve_A(init_state, last_move, max_depth, heuristic):
 
 instances = [
     #[8, 6, 7, 2, 5, 4, 0, 3, 1]
-    #[2, 5, 3, 1, 0, 6, 4, 7, 8]
-    [2, 7, 5, 0, 8, 4, 3, 1, 6]
+    [2, 5, 3, 1, 0, 6, 4, 7, 8]
+    #[2, 7, 5, 0, 8, 4, 3, 1, 6]
 ]
 
 
@@ -193,21 +206,23 @@ for instance in instances:
     strategies = ["IDDFS", Manhattan.manhattan, Euclidean.euclid, Hamming.hamming]
     strategies2 = [Manhattan.manhattan, Euclidean.euclid, Hamming.hamming]
 
-'''For IDDFS + GREEDY CU EURISTICI
-    for strategy in strategies:
+'''For IDDFS + GREEDY CU EURISTICI'''
+'''
+for strategy in strategies:
         start_time = time.time()
         solution = Solve(initial_matrix, "NONE", 30, strategy)
         end_time = time.time()
         if solution:
-            print("Solution found for", strategy.__name__, " : ")
+            print("Solution found for", strategy, " : ")
             for row in solution:
                 print(row)
         else:
             print("No solution found within the maximum depth.")
         print("Elapsed time:", end_time - start_time, "seconds")
-'''
 
+'''
 '''FOR A* cu euristici'''
+
 for strategy in strategies2:
         start_time = time.time()
         solution, move_count = Solve(initial_matrix, "NONE", 30, strategy)

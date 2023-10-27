@@ -3,7 +3,7 @@ def manhattan_distance_for_target(board, target):
     for i in range(3):
         for j in range(3):
             value = board[i][j]
-            if value != 0:  # Nu luăm în considerare caseta goală
+            if value != 0:  # Nu luam în considerare caseta goală
                 target_i, target_j = divmod(value - 1, 3)
                 distance += abs(i - target_i) + abs(j - target_j)
     return distance
