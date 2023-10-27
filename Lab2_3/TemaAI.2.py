@@ -194,7 +194,7 @@ def Solve_A(init_state, last_move, max_depth, heuristic):
 instances = [
     #[8, 6, 7, 2, 5, 4, 0, 3, 1]
     #[2, 5, 3, 1, 0, 6, 4, 7, 8]
-    #[2, 7, 5, 0, 8, 4, 3, 1, 6]
+    [2, 7, 5, 0, 8, 4, 3, 1, 6]
 ]
 
 
