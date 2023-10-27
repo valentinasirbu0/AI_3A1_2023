@@ -151,41 +151,40 @@ def depth_limited_Greedy(matrix, last_move, depth, euristic, move_count=0):
     return None
 
 
-def a_star_search(matrix, last_move, heuristic, max_depth, move_count=0):
-    if move_count > max_depth:
-        return None
-
+def a_star_search(matrix, last_move, heuristic, max_depth):
     if is_final_state(matrix):
-        return matrix, move_count
+        return matrix, 0
 
-    priority_queue = [(heuristic(matrix) + move_count, matrix, last_move)]
+    priority_queue = [(heuristic(matrix), matrix, last_move, 0)]  # Adding move_count to the tuple
     visited = set()
 
     while priority_queue:
-        _, current_matrix, last_move = heapq.heappop(priority_queue)
+        _, current_matrix, last_move, current_move_count = heapq.heappop(priority_queue)
+
+        if tuple(map(tuple, current_matrix)) in visited:
+            continue
+
         visited.add(tuple(map(tuple, current_matrix)))
 
-        print("Intermediate state at move_count", move_count)
+        print("Intermediate state at move_count", current_move_count)
         for row in current_matrix:
             print(row)
         print("--------")
 
+        if current_move_count >= max_depth:
+            continue
+
         for direction in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
             new_matrix, new_last_move = transition([row.copy() for row in current_matrix], last_move, direction)
-        new_matrix_key = tuple(map(tuple, new_matrix))
 
-        if new_matrix_key not in visited:
-            if is_final_state(new_matrix):
-                return new_matrix, move_count + 1
+            if tuple(map(tuple, new_matrix)) not in visited:
+                if is_final_state(new_matrix):
+                    return new_matrix, current_move_count + 1
 
-        if move_count + 1 <= max_depth:
-            heapq.heappush(priority_queue, (heuristic(new_matrix) + move_count + 1, new_matrix, new_last_move))
-            # Increment move_count when making a move
-            move_count += 1
-
+                heapq.heappush(priority_queue, (
+                heuristic(new_matrix) + current_move_count + 1, new_matrix, new_last_move, current_move_count + 1))
 
     return None
-
 
 
 def Solve_A(init_state, last_move, max_depth, heuristic):
@@ -194,7 +193,7 @@ def Solve_A(init_state, last_move, max_depth, heuristic):
 
 instances = [
     #[8, 6, 7, 2, 5, 4, 0, 3, 1]
-    [2, 5, 3, 1, 0, 6, 4, 7, 8]
+    #[2, 5, 3, 1, 0, 6, 4, 7, 8]
     #[2, 7, 5, 0, 8, 4, 3, 1, 6]
 ]
 
@@ -225,7 +224,7 @@ for strategy in strategies:
 
 for strategy in strategies2:
         start_time = time.time()
-        solution, move_count = Solve(initial_matrix, "NONE", 30, strategy)
+        solution, move_count = Solve_A(initial_matrix, "NONE", 30, strategy)
         end_time = time.time()
         if solution:
             print("Solution found for", strategy.__name__, " : ")
@@ -234,7 +233,3 @@ for strategy in strategies2:
         else:
             print("No solution found within the maximum depth.")
         print("Elapsed time:", end_time - start_time, "seconds")
-
-
-
-
