@@ -126,21 +126,14 @@ def bkt_with_fc_mrv(state, domains):
     if cell is None:
         return None
 
+    row, col = cell
     for value in range(1, 10):
         if is_valid(state, cell, value):
-            new_state = state.copy()
-            i, j = cell
-            new_state[i][j] = value
+            new_state = [row[:] for row in state]
+            new_state[row][col] = value
             new_domains = update_domains(domains, cell, value)
 
-            no_empty_domain = True
-            for var in domains:
-                var_i, var_j = var
-                if len(domains[var]) == 0 and (new_state[var_i][var_j] == 0 or new_state[var_i][var_j] == -1):
-                    no_empty_domain = False
-                    break
-
-            if no_empty_domain:
+            if all(new_domain for new_domain in new_domains):
                 res = bkt_with_fc_mrv(new_state, new_domains)
                 if res is not None:
                     return res
