@@ -4,6 +4,7 @@ import Hamming
 import time
 import heapq
 
+
 def initialize_state(instance):
     initial_state = [instance[i:i + 3] for i in range(0, 9, 3)]
     last_zero_position = find_empty_slot(initial_state)

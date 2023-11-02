@@ -141,6 +141,48 @@ def bkt_with_fc_mrv(state, domains):
     return None
 
 
+def find_singletons(state, domains):
+    singletons = []
+    for i in range(9):
+        for j in range(9):
+            if state[i][j] == 0 or state[i][j] == -1:
+                if len(domains[(i, j)]) == 1:
+                    singletons.append((i, j))
+    return singletons
+
+
+def assign_values(state, singletons, domains):
+    for single in singletons:
+        i, j = single
+        state[i][j] = list(domains[(i, j)])[0]
+    return state
+
+
+def arc_consistency(state, domains):
+    if is_completed(state):
+        return state
+
+    new_domains = domains.copy()  # Make a copy of the original domains
+
+    for i in range(9):
+        for j in range(9):
+            if state[i][j] != 0 and state[i][j] != -1:
+                value = state[i][j]
+                var = (i, j)
+
+                # Check and update the domains of related cells
+                new_domains = update_domains(new_domains, var, value)
+
+    singletons = find_singletons(state, new_domains)
+    if singletons:
+        new_state = assign_values(state, singletons, new_domains)
+        color_print_solution(state, singletons)
+        print()
+        return arc_consistency(new_state, new_domains)
+    else:
+        return state
+
+
 def print_solution(solution):
     for i in range(9):
         if i % 3 == 0 and i != 0:
@@ -149,6 +191,20 @@ def print_solution(solution):
             if j % 3 == 0 and j != 0:
                 print("|", end=" ")
             print(solution[i][j], end=" ")
+        print()
+
+
+def color_print_solution(solution, singletons):
+    for i in range(9):
+        if i % 3 == 0 and i != 0:
+            print("-" * 21)
+        for j in range(9):
+            if j % 3 == 0 and j != 0:
+                print("|", end=" ")
+            if (i, j) in singletons:
+                print("\033[91m" + str(solution[i][j]) + "\033[0m", end=" ")
+            else:
+                print(solution[i][j], end=" ")
         print()
 
 
@@ -166,6 +222,8 @@ instance = [
 
 initial_domains = set_initial_domains(instance)
 
+solution_arc_consistency = arc_consistency(instance, initial_domains)
+'''
 solution_fc = bkt_with_fc(instance, initial_domains)
 solution_fc_mrv = bkt_with_fc_mrv(instance, initial_domains)
 
@@ -180,9 +238,13 @@ if solution_fc_mrv:
     print_solution(solution_fc)
 else:
     print("No solution found.")
+'''
 
-
-
+print("\nARC Consistency:")
+if solution_arc_consistency:
+    print_solution(solution_arc_consistency)
+else:
+    print("No solution found.")
 
 
 
