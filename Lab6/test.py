@@ -17,7 +17,6 @@ def prepare_data():
     data = pd.read_csv('C:\\Users\\Valea\\Desktop\\ai\\Lab6\\seeds_dataset.txt', sep="\s+", names=column_names)
     x = data.iloc[:, :-1].values  # scot ultima coloana din date
     y = data.iloc[:, -1].values - 1  # ultima coloana - rezultatul
-
     X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=13)
 
     # incercam sa aducem la medie zero și o deviație standard de 1
@@ -78,9 +77,32 @@ def categorical_crossentropy(y_true, y_pred):
 
 
 X_train, X_test, y_train, y_test = prepare_data()
+learning_rate = 0.01
 
-weights_input_hidden, bias_input_hidden, weights_hidden_output, bias_hidden_output = initialize_parameters(input_size = 7, hidden_size = 5, output_size = 3)
+weights_input_hidden, bias_input_hidden, weights_hidden_output, bias_hidden_output = initialize_parameters(input_size=7, hidden_size=5, output_size=3)
 
-hidden_output, output = forward_propagation(X_train, weights_input_hidden, bias_input_hidden, weights_hidden_output, bias_hidden_output)
-print("Hidden : ", hidden_output)
-print("Output : ", output)
+for epoch in range(2000):  # range prea mare se poate produce overfitting
+
+    hidden_output, output = forward_propagation(X_train, weights_input_hidden, bias_input_hidden, weights_hidden_output, bias_hidden_output)
+    loss = categorical_crossentropy(np.eye(3)[y_train], output)
+    output_error = output - np.eye(3)[y_train]
+
+    output_error = output_error * sigmoid_derivative(output)
+    hidden_error = np.dot(output_error, weights_hidden_output.T) * tanh_derivative(hidden_output)
+
+    weights_hidden_output -= learning_rate * np.dot(hidden_output.T, output_error)
+    weights_input_hidden -= learning_rate * np.dot(X_train.T, hidden_error)
+
+    if epoch % 100 == 0:
+        validation_hidden_output, validation_output = forward_propagation(X_test, weights_input_hidden, bias_input_hidden, weights_hidden_output, bias_hidden_output)
+        validation_loss = categorical_crossentropy(np.eye(3)[y_test], validation_output)
+        print(f"Epoch {epoch}, Training Loss: {loss}, Validation Loss: {validation_loss}")
+        #print(f"Epoch {epoch}, Loss: {loss}")
+
+
+_, test_output = forward_propagation(X_test, weights_input_hidden, bias_input_hidden, weights_hidden_output, bias_hidden_output)
+predicted_labels = np.argmax(test_output, axis=1)
+
+
+accuracy = accuracy_score(y_test, predicted_labels)
+print(f"Accuracy on test set: {accuracy}")
